@@ -4,9 +4,9 @@ import random
 
 ops = {
     'add':  lambda x,y: x+y, 
-    'xor':  lambda x,y: x^y, 
-    'and':  lambda x,y: x&y, 
-    'or':   lambda x,y: x|y
+    # 'xor':  lambda x,y: x^y, 
+    # 'and':  lambda x,y: x&y, 
+    # 'or':   lambda x,y: x|y
 }
 # [0, 1, ... , e, f]
 hex_vocab = list(map(str, range(10))) + [chr(i) for i in range(ord('a'), ord('f')+1)]
@@ -14,17 +14,17 @@ hex_vocab = list(map(str, range(10))) + [chr(i) for i in range(ord('a'), ord('f'
 def format_targ(targ):
     """ Truncate or padd with 0s """
     targ = targ[2:]
-    while len(targ) > 16:
+    while len(targ) > 14:
         targ = targ[1:]
-    while len(targ) < 16:
+    while len(targ) < 14:
         targ = '0' + targ
     return targ
 
 def byte_tokenize(word):
-    assert len(word) == 16
+    assert len(word) == 14
     ##print(word)
     #hi
-    return torch.tensor([int(word[i:i+2], 16) for i in range(0, len(word), 2)])
+    return torch.tensor([0]+[int(word[i:i+2], 16) for i in range(0, len(word), 2)])
 
 def op_tokenize(op_name):
     assert op_name in ops.keys()
@@ -34,22 +34,18 @@ def one_hot(targ):
     return F.one_hot(targ, num_classes=256)
 
 # TODO: make it parse from text file
-def datagen(batch_size):
+def datagen(batch_size, device):
     
     first_byte = []
     second_byte = []
     operation = []
     target = []
     for batch in range(batch_size):
-        a = "".join([hex_vocab[random.randint(0, 15)] for i in range(16)])
-        b = "".join([hex_vocab[random.randint(0, 15)] for i in range(16)])
+        a = "".join([hex_vocab[random.randint(0, 15)] for i in range(14)])
+        b = "".join([hex_vocab[random.randint(0, 15)] for i in range(14)])
         op = random.choice(list(ops.keys()))
         s = hex(ops[op](int(a, 16), int(b, 16)))
-        # print(s)
         s = format_targ(s)
-        # if('x' in s):
-        #     print("\t\t", s)
-
         first_byte.append(byte_tokenize(a))
         second_byte.append(byte_tokenize(b))
         operation.append(op_tokenize(op))
@@ -61,4 +57,4 @@ def datagen(batch_size):
     operation = torch.tensor(operation).view(batch_size, 1)
     target = torch.cat(target).view(batch_size, 256*8)
 
-    return (bytes_, operation), target.float()
+    return bytes_.to(device), operation.to(device), target.float().to(device)
