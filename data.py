@@ -46,6 +46,7 @@ def datagen(batch_size, device):
         op = random.choice(list(ops.keys()))
         s = hex(ops[op](int(a, 16), int(b, 16)))
         s = format_targ(s)
+
         first_byte.append(byte_tokenize(a))
         second_byte.append(byte_tokenize(b))
         operation.append(op_tokenize(op))
